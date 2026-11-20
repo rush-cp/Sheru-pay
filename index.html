@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHERU PAY</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+ background:#080808;
+ color:#f5d47a;
+ font-family:Arial,sans-serif;
+}
+header{
+ padding:25px 15px;
+ text-align:center;
+ background:#111;
+ border-bottom:1px solid #b89443;
+}
+.logo{
+ font-size:30px;
+ font-weight:900;
+ letter-spacing:4px;
+ color:#eac76b;
+}
+.tagline{
+ color:#a88a4c;
+ font-size:10px;
+ letter-spacing:3px;
+ margin-top:7px;
+}
+.container{
+ max-width:480px;
+ margin:auto;
+ padding:20px;
+}
+.balance{
+ background:linear-gradient(135deg,#282016,#090909);
+ border:1px solid #b89443;
+ border-radius:22px;
+ padding:30px 20px;
+ text-align:center;
+ margin:20px 0;
+ box-shadow:0 0 25px #b8944322;
+}
+.balance small{
+ color:#bda66c;
+ letter-spacing:3px;
+}
+.balance h1{
+ font-size:26px;
+ margin-top:18px;
+ color:#f7d77e;
+}
+.balance p{
+ margin-top:10px;
+ color:#fff0bd;
+ letter-spacing:2px;
+ font-size:12px;
+}
+.section{
+ background:#121212;
+ border:1px solid #44351c;
+ border-radius:18px;
+ padding:20px;
+ margin:17px 0;
+}
+h3{
+ color:#eac76b;
+ margin-bottom:16px;
+}
+input{
+ width:100%;
+ padding:15px;
+ margin:8px 0;
+ border-radius:10px;
+ border:1px solid #725a2c;
+ background:#080808;
+ color:white;
+ outline:none;
+}
+button{
+ width:100%;
+ padding:15px;
+ margin-top:10px;
+ border:1px solid #eac76b;
+ border-radius:10px;
+ background:linear-gradient(90deg,#b18a36,#f5d47a);
+ color:#090909;
+ font-weight:bold;
+ font-size:15px;
+ cursor:pointer;
+}
+button.secondary{
+ background:#171717;
+ color:#f5d47a;
+}
+button:hover{opacity:.85}
+.profile{
+ color:#c6b78f;
+ line-height:2;
+ font-size:14px;
+}
+.transaction{
+ padding:12px 0;
+ border-bottom:1px solid #40351f;
+ color:#e8d39c;
+ font-size:13px;
+}
+.hidden{display:none}
+footer{
+ text-align:center;
+ padding:25px;
+ color:#816d42;
+ font-size:11px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">🦁 SHERU PAY</div>
+ <div class="tagline">THE ROYAL VIRTUAL WALLET</div>
+</header>
+
+<div class="container">
+
+<!-- ACCOUNT CREATION -->
+
+<div class="section" id="register">
+ <h3>Create Your Account</h3>
+ <input id="name" placeholder="Full Name">
+ <input id="phone" placeholder="Phone Number">
+ <input id="address" placeholder="Full Address">
+ <button onclick="createAccount()">CREATE ACCOUNT</button>
+</div>
+
+<!-- MAIN APP -->
+
+<div id="app" class="hidden">
+
+ <div class="balance">
+  <small>ROYAL WALLET BALANCE</small>
+  <h1>Arban Tarban</h1>
+  <p>DOLLARS</p>
+ </div>
+
+ <div class="section">
+  <h3>Send Money</h3>
+  <input id="receiver" placeholder="Receiver Name">
+  <input id="paymentID" placeholder="QR / Payment ID">
+  <input id="amount" placeholder="Enter Amount (Arban Tarban Dollars)">
+  <button onclick="sendMoney()">SEND MONEY</button>
+ </div>
+
+ <div class="section">
+  <h3>QR Scanner</h3>
+  <input id="qr" placeholder="Enter QR Payment ID">
+  <button class="secondary" onclick="scanDemo()">SCAN / USE QR</button>
+ </div>
+
+ <div class="section">
+  <h3>Check Balance</h3>
+  <button class="secondary" onclick="checkBalance()">VIEW WALLET</button>
+ </div>
+
+ <div class="section">
+  <h3>My Account</h3>
+  <div class="profile" id="profile"></div>
+  <button class="secondary" onclick="logout()">LOGOUT</button>
+ </div>
+
+ <div class="section">
+  <h3>Transaction History</h3>
+  <div id="history">No transactions yet.</div>
+ </div>
+
+</div>
+
+<footer>
+ SHERU PAY © 2026<br>
+ VIRTUAL CURRENCY SIMULATION
+</footer>
+</div>
+
+<script>
+let account=JSON.parse(localStorage.getItem("sheruAccount"));
+let history=JSON.parse(localStorage.getItem("sheruHistory")||"[]");
+
+function createAccount(){
+ let name=document.getElementById("name").value.trim();
+ let phone=document.getElementById("phone").value.trim();
+ let address=document.getElementById("address").value.trim();
+
+ if(!name||!phone||!address){
+  alert("Fill all details");
+  return;
+ }
+
+ account={name,phone,address};
+ localStorage.setItem("sheruAccount",JSON.stringify(account));
+ showApp();
+}
+
+function showApp(){
+ if(!account)return;
+
+ document.getElementById("register").classList.add("hidden");
+ document.getElementById("app").classList.remove("hidden");
+
+ document.getElementById("profile").innerHTML=
+ "Name: "+safe(account.name)+"<br>"+
+ "Phone: "+safe(account.phone)+"<br>"+
+ "Address: "+safe(account.address);
+
+ showHistory();
+}
+
+function safe(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",
+ '"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function sendMoney(){
+ let receiver=document.getElementById("receiver").value.trim();
+ let id=document.getElementById("paymentID").value.trim();
+ let amount=document.getElementById("amount").value.trim();
+
+ if(!receiver||!id||!amount||!isFinite(Number(amount))||Number(amount)<=0){
+  alert("Enter valid payment details");
+  return;
+ }
+
+ history.unshift({
+  receiver,id,amount,
+  date:new Date().toLocaleString()
+ });
+
+ localStorage.setItem("sheruHistory",JSON.stringify(history));
+ alert("Virtual payment successful!");
+ showHistory();
+
+ document.getElementById("receiver").value="";
+ document.getElementById("paymentID").value="";
+ document.getElementById("amount").value="";
+}
+
+function scanDemo(){
+ let id=document.getElementById("qr").value.trim();
+ if(!id){
+  alert("Enter a QR Payment ID");
+  return;
+ }
+ document.getElementById("paymentID").value=id;
+ alert("Demo QR ID added!");
+}
+
+function checkBalance(){
+ alert("Your wallet balance: Arban Tarban Dollars");
+}
+
+function showHistory(){
+ let h=document.getElementById("history");
+ if(!history.length){
+  h.innerHTML="No transactions yet.";
+  return;
+ }
+
+ h.innerHTML=history.map(t=>
+  '<div class="transaction">'+
+  '<b>'+safe(t.receiver)+'</b><br>'+
+  'Amount: '+safe(t.amount)+' Arban Tarban Dollars<br>'+
+  'Payment ID: '+safe(t.id)+'<br>'+
+  '<small>'+safe(t.date)+'</small></div>'
+ ).join("");
+}
+
+function logout(){
+ account=null;
+ localStorage.removeItem("sheruAccount");
+ location.reload();
+}
+
+if(account)showApp();
+</script>
+
+</body>
+</html>
